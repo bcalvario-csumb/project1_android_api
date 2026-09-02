@@ -11,9 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.view.WindowCompat.enableEdgeToEdge
-import com.example.project1.Greeting
 import com.example.project1.ui.theme.MyApplicationTheme
+import android.content.Intent
+import androidx.compose.material3.Button
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,10 +22,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
+                    Button(
+                        onClick = {
+                            val loginIntent = Intent(this@MainActivity, LoginActivity::class.java)
+                            startActivity(loginIntent)
+                        },
                         modifier = Modifier.padding(innerPadding)
-                    )
+                    ) {
+                        Text("Open Login Screen")
+                    }
                 }
             }
         }
