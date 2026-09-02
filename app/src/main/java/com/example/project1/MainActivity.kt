@@ -14,6 +14,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat.enableEdgeToEdge
 import com.example.project1.Greeting
 import com.example.project1.ui.theme.MyApplicationTheme
+//API Imports
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,6 +37,10 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
+//This is where I want to start working on the API
+val apiKey ="ak_5130f2d332404035a08e8d030472082a"
+fun load(path: String): AnyRow = DataRow.read()
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     Text(
