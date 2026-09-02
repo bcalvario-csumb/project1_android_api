@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.room)
+
 }
 
 android {
@@ -15,7 +17,6 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "1.2"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
