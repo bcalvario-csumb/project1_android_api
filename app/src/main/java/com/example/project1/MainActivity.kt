@@ -29,10 +29,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
+                    Button(
+                        onClick = {
+                            val loginIntent = Intent(this@MainActivity, LoginActivity::class.java)
+                            startActivity(loginIntent)
+                        },
                         modifier = Modifier.padding(innerPadding)
-                    )
+                    ) {
+                        Text("Open Login Screen")
+                    }
                 }
             }
 
