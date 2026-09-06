@@ -8,7 +8,7 @@ import com.example.project1.database.entities.UserHasCard
 @Dao
 interface UserHasCardDAO {
     @Insert
-    suspend fun insertUserCard(userHasCard: UserHasCard)
+    suspend fun insertUserCard(userHasCard: UserHasCard) : Long
 
     @Query("""
         SELECT cards.* FROM cards

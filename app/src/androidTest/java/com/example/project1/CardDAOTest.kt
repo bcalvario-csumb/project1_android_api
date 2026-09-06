@@ -9,7 +9,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class CardDAOTest : BaseDatabaseTest() {
+class CardDAOTest : DatabaseTest() {
     private lateinit var cardDao: CardDAO
 
     @Before
