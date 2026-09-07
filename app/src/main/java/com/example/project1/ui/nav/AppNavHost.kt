@@ -9,6 +9,7 @@ import androidx.navigation.toRoute
 import com.example.project1.ui.home.HomeScreen
 import com.example.project1.ui.login.LoginScreen
 import com.example.project1.ui.signup.SignUpScreen
+import com.example.project1.database.GameDatabase
 import kotlinx.serialization.Serializable
 
 // Type-safe navigation routes (Navigation Compose 2.8+).
@@ -35,6 +36,7 @@ data class HomeRoute(val username: String)
 @Composable
 fun AppNavHost(
     modifier: Modifier = Modifier,
+    database: GameDatabase,
 ) {
     val navController = rememberNavController()
     NavHost(
@@ -44,6 +46,7 @@ fun AppNavHost(
     ) {
         composable<LoginRoute> {
             LoginScreen(
+                database = database,
                 onLoginSuccess = { username ->
                     navController.navigate(HomeRoute(username)) {
                         // Drop Login from the back stack so Back from Home exits the
@@ -56,6 +59,7 @@ fun AppNavHost(
         }
         composable<SignUpRoute> {
             SignUpScreen(
+                database = database,
                 onSignUpSuccess = { username ->
                     navController.navigate(HomeRoute(username)) {
                         // SignUp sits above Login on the stack, so popping to Login
@@ -72,6 +76,7 @@ fun AppNavHost(
             // This is the type-safe equivalent of Express's req.params.
             val home = backStackEntry.toRoute<HomeRoute>()
             HomeScreen(
+                database = database,
                 username = home.username,
                 onLogout = {
                     navController.navigate(LoginRoute) {
