@@ -13,3 +13,6 @@
 .cxx
 local.properties
 /gradle
+.gradle
+.idea
+.claude
