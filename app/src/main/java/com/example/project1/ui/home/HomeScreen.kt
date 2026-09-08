@@ -37,7 +37,7 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(database) {
-        // viewModel.load(database)
+        viewModel.load(database, username)
     }
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
         Column(
@@ -55,10 +55,10 @@ fun HomeScreen(
             when (val s = state) {
                 is HomeUiState.Loading -> CircularProgressIndicator()
 
-                is HomeUiState.Error -> Button(onClick = { viewModel.load() }) {
+                is HomeUiState.Error -> Button(onClick = { viewModel.load(database, username) }) {
                     Text("Retry: ${s.message}")
                 }
-                is HomeUiState.Success -> Text("Loaded ${s.products.length} chars of products")
+                is HomeUiState.Success -> Text("Loaded ${s.cards.size} cards")
             }
             Spacer(modifier = Modifier.height(24.dp))
             TextButton(onClick = onLogout) {
