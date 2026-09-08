@@ -14,6 +14,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -21,7 +22,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.project1.database.GameDatabase
+import com.example.project1.database.entities.User
 import com.example.project1.ui.theme.MyApplicationTheme
+import kotlinx.coroutines.launch
 
 /**
  * Sign-up screen.
@@ -34,12 +38,15 @@ fun SignUpScreen(
     onSignUpSuccess: (String) -> Unit,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
+    database: GameDatabase?
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
+    var errorMessage by rememberSaveable { mutableStateOf("") }
     val passwordsMatch = password == confirmPassword
     val canSubmit = email.isNotBlank() && password.isNotBlank() && passwordsMatch
+    val coroutineScope = rememberCoroutineScope()
     Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
         Column(
             modifier = Modifier
@@ -90,7 +97,18 @@ fun SignUpScreen(
             //   SignUpViewModel that calls UserDAO.insertUser(). Never store a raw
             //   password, hash it before it reaches the database.
             Button(
-                onClick = { onSignUpSuccess(email) },
+                onClick = {
+                    coroutineScope.launch {
+                        val existingUser = database?.userDao()?.getUserByEmail(email)
+                        if (existingUser != null) {
+                            errorMessage = "An account with this email already exists."
+                        } else {
+                            val newUser = User(name = name, email = email, password = password)
+                            database?.userDao()?.insertUser(newUser)
+                            onSignUpSuccess(email)
+                        }
+                    }
+                },
                 enabled = canSubmit,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -113,6 +131,6 @@ fun SignUpScreen(
 @Composable
 private fun SignUpScreenPreview() {
     MyApplicationTheme {
-        SignUpScreen(onSignUpSuccess = {}, onNavigateBack = {})
+        SignUpScreen(database = null, onSignUpSuccess = {}, onNavigateBack = {})
     }
 }

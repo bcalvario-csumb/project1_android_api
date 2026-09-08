@@ -12,12 +12,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.project1.database.GameDatabase
 
 /**
  * Home screen, shown once the user is signed in.
@@ -27,12 +29,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
  */
 @Composable
 fun HomeScreen(
+    database: GameDatabase?,
     username: String,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(database) {
+        // viewModel.load(database)
+    }
     Scaffold(modifier = modifier.fillMaxSize()) { padding ->
         Column(
             modifier = Modifier
