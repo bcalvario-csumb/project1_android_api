@@ -2,11 +2,12 @@ package com.example.project1.database.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "users")
-data class User (
+@Entity(tableName = "cards")
+data class Card (
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val name: String,
-    val email: String,
-    val password: String
+    val description: String,
+    val cost: Int,
+    val img: String
 )
