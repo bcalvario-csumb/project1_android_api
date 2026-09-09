@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.project1.database.GameDatabase
 import com.example.project1.database.entities.Card
+import androidx.compose.foundation.lazy.items
 
 /**
  * Home screen, shown once the user is signed in.
