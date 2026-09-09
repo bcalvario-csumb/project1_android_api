@@ -21,18 +21,30 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!--
+          COMMENTED OUT — the app is now single-Activity. Login and Sign Up are
+          @Composable destinations in AppNavHost (LoginScreen.kt / SignUpScreen.kt),
+          reached by navigation rather than by startActivity().
+
+          Leaving these registered would imply the Activities are still live screens.
+          Kept here rather than deleted so nothing is lost from the repo.
+
+          TODO(team): delete this block along with LoginActivity.kt and
+            SignUpActivity.kt once everyone has seen the change.
+
         <activity
-            android:name=".LoginActivity"
+            android:name=".ui.login.LoginActivity"
             android:exported="false"
             android:label="@string/title_activity_login"
             android:theme="@style/Theme.Project1_android_api"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".SignUpActivity"
+            android:name=".ui.signup.SignUpActivity"
             android:exported="false"
             android:label="@string/title_activity_sign_up"
             android:theme="@style/Theme.Project1_android_api"
             android:windowSoftInputMode="adjustResize" />
+        -->
     </application>
 
 </manifest>
