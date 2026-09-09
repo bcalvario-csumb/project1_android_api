@@ -14,6 +14,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -21,7 +22,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.project1.database.GameDatabase
 import com.example.project1.ui.theme.MyApplicationTheme
+import kotlinx.coroutines.launch
 
 /**
  * Login screen.
@@ -37,10 +40,13 @@ fun LoginScreen(
     onLoginSuccess: (String) -> Unit,
     onNavigateToSignUp: () -> Unit,
     modifier: Modifier = Modifier,
+    database: GameDatabase?,
 ) {
     // Credentials stay in screen state and never travel through a navigation route.
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+    var errorMessage by rememberSaveable { mutableStateOf("") }
     Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
         Column(
             modifier = Modifier
@@ -78,7 +84,16 @@ fun LoginScreen(
             //   LoginUiState (Idle / Submitting / Error) the same way HomeViewModel
             //   does. Only call onLoginSuccess once the check actually passes.
             Button(
-                onClick = { onLoginSuccess(email) },
+                onClick = {
+                    coroutineScope.launch {
+                        val validUser = database?.userDao()?.validateLogin(email, password)
+                        if (validUser != null) {
+                            onLoginSuccess(validUser.email)
+                        } else {
+                            errorMessage = "Invalid email or password"
+                        }
+                    }
+                },
                 enabled = email.isNotBlank() && password.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -101,6 +116,6 @@ private fun LoginScreenPreview() {
     // Passing empty lambdas is exactly why the screen takes callbacks instead of
     // a NavController, there is no navigation graph in a preview.
     MyApplicationTheme {
-        LoginScreen(onLoginSuccess = {}, onNavigateToSignUp = {})
+        LoginScreen(database = null, onLoginSuccess = {}, onNavigateToSignUp = {})
     }
 }
