@@ -15,5 +15,9 @@ interface UserHasCardDAO {
         INNER JOIN user_has_card ON cards.id = user_has_card.cardId
         WHERE user_has_card.userId = :userId
         """)
+
     suspend fun getCardsForUser(userId: Int): List<Card>
+
+    @Query("DELETE FROM user_has_card WHERE userId = :userId AND cardId = :cardId")
+    suspend fun removeCardFromUser(userId: Int, cardId: Int): Int
 }

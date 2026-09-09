@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.project1.data.ProductsRepository
 import com.example.project1.database.GameDatabase
 import com.example.project1.database.entities.Card
+import com.example.project1.database.entities.UserHasCard
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,7 +31,21 @@ ProductsRepository()) : ViewModel(){
 
         _uiState.value = runCatching {
             val user = database.userDao().getUserByEmail(username) ?: throw Exception("User not found")
-            database.userHasCardDao().getCardsForUser(user.id)
+            val userCards = database.userHasCardDao().getCardsForUser(user.id)
+            HomeUiState.Success(userId = user.id, cards = userCards)
         }.fold(onSuccess = { HomeUiState.Success(it) }, onFailure = { HomeUiState.Error(it.message ?: "Unknown Error") })
+    }
+
+    fun tradeCard(database: GameDatabase?, currentUserId: Int, targetUserId: Int, cardId: Int, username: String) = viewModelScope.launch {
+        if (database != null) {
+            database.userHasCardDao().removeCardFromUser(currentUserId, cardId)
+            database.userHasCardDao().insertUserCard(
+                UserHasCard(
+                    userId = targetUserId,
+                    cardId = cardId
+                )
+            )
+            load(database, username)
+        }
     }
 }

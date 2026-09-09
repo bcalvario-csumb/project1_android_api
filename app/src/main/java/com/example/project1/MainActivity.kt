@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MyApplicationTheme {
-                AppNavHost();
+                AppNavHost(database = database);
             }
         }
     }
