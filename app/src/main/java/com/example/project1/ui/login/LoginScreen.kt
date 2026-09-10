@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import com.example.project1.database.GameDatabase
 import com.example.project1.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Login screen.
@@ -88,7 +90,9 @@ fun LoginScreen(
                     coroutineScope.launch {
                         val validUser = database?.userDao()?.validateLogin(email, password)
                         if (validUser != null) {
-                            onLoginSuccess(validUser.email)
+                            withContext(Dispatchers.Main.immediate) {
+                                onLoginSuccess(validUser.email)
+                            }
                         } else {
                             errorMessage = "Invalid email or password"
                         }
