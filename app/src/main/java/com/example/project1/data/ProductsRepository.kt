@@ -20,5 +20,20 @@ class ProductsRepository (private val client : OkHttpClient = OkHttpClient()){
             r.body?.string() ?: error("Response body was empty.")
         }
     }
+    suspend fun fetchRandomProduct(): String = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("https://anycrap.shop/api/v1/products/random")
+            .addHeader("Authorization", "Bearer $API_KEY")
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                error("HTTP ${response.code}")
+            }
+
+            response.body?.string()
+                ?: error("Response body was empty.")
+        }
+    }
 }
 

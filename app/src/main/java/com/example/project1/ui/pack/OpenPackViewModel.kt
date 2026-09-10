@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.example.project1.data.ProductsRepository
+import org.json.JSONObject
 
 sealed interface PackUiState {
     data object Ready : PackUiState
@@ -17,7 +19,8 @@ sealed interface PackUiState {
     data class Error(val message: String) : PackUiState
 }
 
-class OpenPackViewModel : ViewModel() {
+class OpenPackViewModel(private val repo: ProductsRepository = ProductsRepository()) :
+    ViewModel() {
     private val _uiState = MutableStateFlow<PackUiState>(PackUiState.Ready)
     val uiState: StateFlow<PackUiState> = _uiState.asStateFlow()
 
@@ -29,35 +32,34 @@ class OpenPackViewModel : ViewModel() {
                 database.userDao().getUserByEmail(username)
                     ?: throw Exception("Signed in user was not found")
 
-            val cardsToOpen = listOf(
+            val responseText = repo.fetchRandomProduct()
+
+            val responseJson = JSONObject(responseText)
+
+            val products = responseJson.getJSONArray("data")
+
+            if (products.length() == 0) {
+                throw Exception("The API did not return any products")
+            }
+
+            val cardsToOpen = List(products.length()) { index ->
+                val product = products.getJSONObject(index)
+
                 Card(
-                    name = "Forest Guardian",
-                    description = "A strong defender from the starter pack.",
-                    cost = 10,
-                    img = "forest_guardian"
-                ),
-                Card(
-                    name = "Flame Sprite",
-                    description = "A quick attacker from the starter pack.",
-                    cost = 15,
-                    img = "flame_sprite"
-                ),
-                Card(
-                    name = "Ocean Sage",
-                    description = "A balanced support card from the starter pack .",
+                    name = product.getString("name"),
+                    description = product.getString("description"),
                     cost = 20,
-                    img = "ocean_sage"
+                    img = product.getString("image"),
                 )
-            )
+            }
 
             val openedCards = cardsToOpen.map { card ->
-                val newCardId =
-                    database.cardDao().insertCard(card).toInt()
+                val newCardId = database.cardDao().insertCard(card).toInt()
 
                 database.userHasCardDao().insertUserCard(
                     UserHasCard(
                         userId = user.id,
-                        cardId = newCardId
+                        cardId = newCardId,
                     )
                 )
 
