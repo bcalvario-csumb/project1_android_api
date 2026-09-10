@@ -1,7 +1,10 @@
 package com.example.project1.ui.pack
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.project1.data.ProductsCache
 import com.example.project1.database.GameDatabase
 import com.example.project1.database.entities.Card
 import com.example.project1.database.entities.UserHasCard
@@ -19,8 +22,8 @@ sealed interface PackUiState {
     data class Error(val message: String) : PackUiState
 }
 
-class OpenPackViewModel(private val repo: ProductsRepository = ProductsRepository()) :
-    ViewModel() {
+class OpenPackViewModel(application: Application) : AndroidViewModel(application) {
+    private val repo = ProductsRepository(ProductsCache(application.applicationContext))
     private val _uiState = MutableStateFlow<PackUiState>(PackUiState.Ready)
     val uiState: StateFlow<PackUiState> = _uiState.asStateFlow()
 
