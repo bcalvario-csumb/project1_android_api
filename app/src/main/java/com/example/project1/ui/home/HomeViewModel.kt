@@ -10,14 +10,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
+import android.util.Log //importing log cat for personal reference - Carlos
+//Adding in these so that I can use the cache files
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import com.example.project1.data.ProductsCache
 sealed interface HomeUiState{
     data object Loading : HomeUiState
     data class Success (val userId: Int, val cards: List<Card>) : HomeUiState
     data class Error (val message : String) : HomeUiState
 }
-class HomeViewModel (private val repo: ProductsRepository =
-ProductsRepository()) : ViewModel(){
+class HomeViewModel(application: Application) : AndroidViewModel(application) {
+    private val repo = ProductsRepository(ProductsCache(application.applicationContext))
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
@@ -28,6 +32,16 @@ ProductsRepository()) : ViewModel(){
             _uiState.value = HomeUiState.Error("Database not initialized")
             return@launch
         }
+
+        //making sure the apiData makes it this far
+        runCatching {
+            repo.fetchProducts()
+        }.onSuccess { response ->
+            Log.d("HomeViewModel", "API data received: ${response.length} characters")
+        }.onFailure { error ->
+            Log.e("HomeViewModel", "API unavailable", error)
+        }
+
 
         _uiState.value = runCatching {
             val user = database.userDao().getUserByEmail(username) ?: throw Exception("User not found")
