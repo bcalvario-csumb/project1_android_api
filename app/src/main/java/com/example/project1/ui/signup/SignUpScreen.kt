@@ -26,6 +26,8 @@ import com.example.project1.database.GameDatabase
 import com.example.project1.database.entities.User
 import com.example.project1.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Sign-up screen.
@@ -114,7 +116,10 @@ fun SignUpScreen(
                         } else {
                             val newUser = User(name = name, email = email, password = password)
                             database?.userDao()?.insertUser(newUser)
-                            onSignUpSuccess(email)
+
+                            withContext(Dispatchers.Main.immediate) {
+                                onSignUpSuccess(email)
+                            }
                         }
                     }
                 },
