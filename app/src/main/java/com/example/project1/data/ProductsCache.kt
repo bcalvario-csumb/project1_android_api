@@ -9,7 +9,7 @@ import android.content.Context
  * into actual trading cards
  *
  *
- * 
+ *
  */
 class ProductsCache(context: Context) {
     private val p = context.getSharedPreferences("products_cache", Context.MODE_PRIVATE)
