@@ -10,6 +10,7 @@ import com.example.project1.ui.home.HomeScreen
 import com.example.project1.ui.login.LoginScreen
 import com.example.project1.ui.signup.SignUpScreen
 import com.example.project1.database.GameDatabase
+import com.example.project1.ui.pack.OpenPackScreen
 import kotlinx.serialization.Serializable
 
 // Type-safe navigation routes (Navigation Compose 2.8+).
@@ -32,6 +33,9 @@ object SignUpRoute
 
 @Serializable
 data class HomeRoute(val username: String)
+
+@Serializable
+data class OpenPackRoute(val username: String)
 
 @Composable
 fun AppNavHost(
@@ -78,10 +82,27 @@ fun AppNavHost(
             HomeScreen(
                 database = database,
                 username = home.username,
+                onOpenPack = {
+                    navController.navigate(
+                        OpenPackRoute(
+                            home.username
+                        )
+                    )
+                },
                 onLogout = {
                     navController.navigate(LoginRoute) {
                         popUpTo<HomeRoute> { inclusive = true }
                     }
+                },
+            )
+        }
+        composable<OpenPackRoute> { backStackEntry ->
+            val pack = backStackEntry.toRoute<OpenPackRoute>()
+            OpenPackScreen(
+                database = database,
+                username = pack.username,
+                onNavigateBack = {
+                    navController.popBackStack()
                 },
             )
         }
