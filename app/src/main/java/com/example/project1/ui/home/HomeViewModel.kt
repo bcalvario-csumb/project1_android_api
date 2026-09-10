@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 
 sealed interface HomeUiState{
     data object Loading : HomeUiState
-    data class Success (val cards: List<Card>) : HomeUiState
+    data class Success (val userId: Int, val cards: List<Card>) : HomeUiState
     data class Error (val message : String) : HomeUiState
 }
 class HomeViewModel (private val repo: ProductsRepository =
@@ -33,7 +33,7 @@ ProductsRepository()) : ViewModel(){
             val user = database.userDao().getUserByEmail(username) ?: throw Exception("User not found")
             val userCards = database.userHasCardDao().getCardsForUser(user.id)
             HomeUiState.Success(userId = user.id, cards = userCards)
-        }.fold(onSuccess = { HomeUiState.Success(it) }, onFailure = { HomeUiState.Error(it.message ?: "Unknown Error") })
+        }.fold(onSuccess = { it }, onFailure = { HomeUiState.Error(it.message ?: "Unknown Error") })
     }
 
     fun tradeCard(database: GameDatabase?, currentUserId: Int, targetUserId: Int, cardId: Int, username: String) = viewModelScope.launch {

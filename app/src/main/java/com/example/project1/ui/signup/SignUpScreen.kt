@@ -1,5 +1,6 @@
 package com.example.project1.ui.signup
 
+import android.R.attr.name
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,12 +41,13 @@ fun SignUpScreen(
     modifier: Modifier = Modifier,
     database: GameDatabase?
 ) {
+    var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
     var errorMessage by rememberSaveable { mutableStateOf("") }
     val passwordsMatch = password == confirmPassword
-    val canSubmit = email.isNotBlank() && password.isNotBlank() && passwordsMatch
+    val canSubmit = name.isNotBlank() && email.isNotBlank() && password.isNotBlank() && passwordsMatch
     val coroutineScope = rememberCoroutineScope()
     Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
         Column(
@@ -60,6 +62,14 @@ fun SignUpScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(24.dp))
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
