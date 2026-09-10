@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import android.util.Log //importing log cat for personal reference - Carlos
 
 sealed interface HomeUiState{
     data object Loading : HomeUiState
@@ -28,6 +29,16 @@ ProductsRepository()) : ViewModel(){
             _uiState.value = HomeUiState.Error("Database not initialized")
             return@launch
         }
+
+        //making sure the apiData makes it this far
+        runCatching {
+            repo.fetchProducts()
+        }.onSuccess { response ->
+            Log.d("HomeViewModel", "API data received: ${response.length} characters")
+        }.onFailure { error ->
+            Log.e("HomeViewModel", "API unavailable", error)
+        }
+
 
         _uiState.value = runCatching {
             val user = database.userDao().getUserByEmail(username) ?: throw Exception("User not found")

@@ -24,6 +24,7 @@ class ProductsRepository(
                 val body = response.body?.string()
                 Log.d(TAG, "API response code: ${response.code}")
                 Log.d(TAG, "API response length: ${body?.length ?: 0}")
+                Log.d(TAG, "Response preview: ${body?.take(500)}")
                 if (!response.isSuccessful) {
                     error("HTTP ${response.code}")
                 }
