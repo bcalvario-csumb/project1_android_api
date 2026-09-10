@@ -9,6 +9,7 @@ import com.example.project1.ui.nav.AppNavHost
 import androidx.room.Room
 import com.example.project1.database.GameDatabase
 
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
