@@ -11,11 +11,17 @@ something real.
 
 ## 1. The finding that shapes this design
 
-**The assigned tools cannot analyse this codebase.** This is not an obstacle to work around —
-it is the most defensible thing the write-up can be built on, provided it is demonstrated
-rather than asserted.
+> **Revised 2026-09-12.** The first draft of this spec claimed PMD's Kotlin support was
+> "experimental and not exposed by the Gradle plugin." **That was wrong.** PMD has had
+> *stable* Kotlin support since 7.0.0, and it has been verified working on this repository.
+> The corrected picture is below. Error Prone's situation is unchanged.
 
-Evidence, measured on this repository:
+Requirement (confirmed with instructor, 2026-09-12): **PMD and detekt must both actually
+work** — not merely be present in the build.
+
+### 1.1 What was measured
+
+All figures below were produced by running PMD 7.27.0 directly against this repository.
 
 ```
 .java files under app/src:  0
@@ -24,27 +30,43 @@ Evidence, measured on this repository:
 > Task :app:compileDebugJavaWithJavac NO-SOURCE
 ```
 
-Two independent reasons:
+| Tool | Can it read Kotlin? | Findings here | Verdict |
+|---|---|---|---|
+| **Error Prone** | ✗ javac plugin, no javac runs | 0, structurally | Wire as assigned; **will never fire** |
+| **PMD — built-in Kotlin rules** | ✅ parses cleanly | **0** | Works, but only 3 rules exist |
+| **PMD — CPD (copy-paste)** | ✅ | **8 duplications** | ✅ **This is what makes PMD productive** |
+| **detekt** | ✅ native | TBD, expected dozens | Primary smell source |
 
-| Tool | Why it finds nothing here |
-|---|---|
-| **Error Prone** | It is a **javac plugin**. It inspects the AST as the Java compiler builds it. `compileDebugJavaWithJavac` is `NO-SOURCE`, so there is no compilation for it to hook. |
-| **PMD** | It parses **Java source sets**. Gradle's PMD plugin creates one `Pmd` task per Java source set; an Android module with only Kotlin has none, so no tasks are created. PMD's Kotlin support remains experimental and is not exposed by the Gradle plugin. |
+### 1.2 Error Prone remains structurally inert
 
-Two corroborating details from the tool documentation:
+It is a **javac plugin** — it inspects the AST as the Java compiler builds it.
+`compileDebugJavaWithJavac` is `NO-SOURCE`, so there is nothing to hook. Separately,
+`gradle-errorprone-plugin` states plainly: **"There's no specific support for the Android
+Gradle Plugin."** It creates an `errorprone` configuration but does not wire it to Android
+compile tasks. Both facts are worth reporting; neither is fixable without inventing Java.
 
-- The Gradle PMD plugin is built on the Java plugin's model. Android modules use a different
-  source-set model, which is why third-party plugins exist purely to bridge the two.
-- `gradle-errorprone-plugin` states plainly: **"There's no specific support for the Android
-  Gradle Plugin."** It creates an `errorprone` configuration but does not wire it to Android
-  compile tasks automatically.
+### 1.3 PMD works on Kotlin — with a caveat that becomes the story
 
-So even in a hypothetical Android project that *did* contain Java, both tools need manual
-wiring. Here they additionally have zero input.
+PMD parses all 32 Kotlin files without error. But PMD ships only **three** built-in Kotlin
+rules — `FunctionNameTooShort`, `LocalVariableShadowsParameter` (best practices) and
+`OverrideBothEqualsAndHashcode` (error prone) — and **none of them fire on this codebase**:
 
-**Design consequence:** wire both tools anyway, exactly as assigned, and capture their empty
-output as evidence. Add detekt — the Kotlin-native equivalent — to produce the findings that
-steps 2–6 of the assignment require.
+```
+[INFO] Found no violations.
+```
+
+The value comes from **CPD**, PMD's copy-paste detector, which fully supports Kotlin. At
+`--minimum-tokens 50` it reports **8 duplications**, the largest being 36 lines / 179 tokens.
+
+**The Gradle wiring problem is separate from the capability question.** Gradle's `pmd` plugin
+creates one `Pmd` task per *Java* source set, and an Android module has none. That is a
+task-creation limitation, not a PMD limitation, and it is solved by registering a `Pmd` task
+manually against the Kotlin sources (see §5.5).
+
+**Design consequence:** PMD earns its place through CPD plus its three built-in rules, with
+custom XPath rules as an optional extension (AST dumping is available — verified). detekt
+carries the bulk of the smell detection. Error Prone is wired as assigned and reported as
+inert, with evidence.
 
 ---
 
@@ -78,7 +100,8 @@ Versions resolved from Maven Central and the Gradle Plugin Portal on 2026-09-11.
 | Gradle | 9.6.0 | — | 9.6.0 | ✅ |
 | AGP | 9.3.2 | JDK 17+ | JBR 25 | ✅ |
 | Kotlin | 2.2.10 | — | 2.2.10 | ✅ |
-| **PMD** | 7.27.0 | Java source sets | none | ⚠️ *no tasks created — expected* |
+| **PMD** | 7.27.0 | — | Kotlin 2.2.10 | ✅ *parses Kotlin; verified* |
+| **`pmd-kotlin`** | 7.27.0 | stable since PMD 7.0 | — | ✅ *must be on the PMD classpath* |
 | **Error Prone** | `error_prone_core` 2.50.0 | **JDK 21+** | JDK 25 | ✅ runs, but ⚠️ *no javac invocation* |
 | `net.ltgt.errorprone` | 5.1.1 | Gradle 7.1+ | 9.6.0 | ✅ |
 | **detekt (stable)** | 1.23.8 | built against **Kotlin 2.0.21** | Kotlin 2.2.10 | ⚠️ version skew |
@@ -162,12 +185,55 @@ Both are configured — not silently disabled — in `config/detekt/detekt.yml`,
 recorded in a comment. The distinction matters for the write-up: a *tuned threshold* is an
 engineering judgment; a *disabled rule* is an abdication.
 
+### 5.2b CPD (PMD copy-paste detection) — measured
+
+CPD is where PMD produces real signal. Threshold sensitivity, measured on this repo:
+
+| `--minimum-tokens` | Duplications found |
+|---|---|
+| 40 | 10 |
+| **50** | **8** ← proposed |
+| 75 | 7 |
+| 100 | 6 |
+| 150 | 1 |
+
+**This table is the write-up's "what threshold would you change" evidence.** It shows the
+finding count is a tuning artefact, not a property of the code.
+
+At 50 tokens, **6 of the 8 duplications involve `LoginActivity.kt` or `SignUpActivity.kt`** —
+the superseded Activities deliberately kept in the repo for the team. CPD independently
+rediscovered dead code that was already known to be redundant, which is a strong "caught
+something real" result: deleting those two files removes most reported duplication in one
+move. The residual `LoginScreen` ↔ `SignUpScreen` overlap is the genuine smell to fix by
+extraction.
+
+Proposed setting: `--minimum-tokens 50`, failing the build on any duplication *after* the
+Activity deletion lands.
+
 ### 5.3 Suppression policy
 
 - Suppressions use `@Suppress("RuleName")` at the narrowest possible scope.
 - Every suppression carries an adjacent comment stating **why**, not what.
 - Hard cap: **3**. Exceeding it means the finding should have been fixed or the threshold
   tuned instead.
+
+### 5.5 Wiring PMD to Kotlin sources in Gradle
+
+Gradle's `pmd` plugin will create no tasks here (no Java source sets). Two routes, try in
+order:
+
+1. **Register a `Pmd` task manually** — `tasks.register<Pmd>("pmdKotlin")` with
+   `source = fileTree("src/main/java") { include("**/*.kt") }`, `ruleSetFiles` pointing at a
+   Kotlin ruleset XML, and **`pmd-kotlin` added to the `pmd` configuration** so the language
+   module is on the tool classpath. Keeps the assignment's "add the PMD plugin" literal.
+2. **Fallback: `JavaExec` against PMD CLI** — guaranteed to work (it is exactly what was
+   verified above) but bypasses the Gradle plugin.
+
+CPD is *not* exposed by Gradle's `pmd` plugin at all, so it needs its own `JavaExec` task
+invoking `pmd cpd` regardless of which route above succeeds.
+
+Note the CLI difference found during verification: `pmd check` accepts `--no-cache`,
+`pmd cpd` does **not** (`--no-fail-on-violation` etc. are its options).
 
 ### 5.4 Failure behaviour
 
@@ -203,7 +269,8 @@ All are real smells observed in the code, not manufactured:
 
 | # | Smell (Fowler) | Location | Fix |
 |---|---|---|---|
-| 1 | Duplicated Code | `LoginScreen` / `SignUpScreen` | Extract a shared password-field composable; the two form scaffolds are near-identical |
+| 0 | Duplicated Code (**CPD-confirmed**) | `LoginActivity.kt`, `SignUpActivity.kt` | **Delete both.** Superseded by the Screen composables; involved in 6 of 8 CPD duplications. Single highest-value fix |
+| 1 | Duplicated Code (**CPD-confirmed**) | `LoginScreen` / `SignUpScreen` | Extract a shared password-field composable; residual overlap after the deletion above |
 | 2 | Magic Number | `HomeScreen` → `tradeCard(..., 2, ...)` | Hardcoded target user ID; name it or make it a real parameter |
 | 3 | Long Parameter List | `HomeViewModel.tradeCard(5 params)` | `username` is derivable from state; collapse |
 | 4 | Misplaced package | `ui/login/admin/` | Admin is not part of the login flow; move to `ui/admin/` |
@@ -227,15 +294,26 @@ issue currently committed to the repository.
 
 Ordered, each with a pass criterion. Assumption-checking, not hope.
 
+**Already verified (2026-09-12, PMD 7.27.0 CLI against this repo):**
+
+- ✅ PMD parses all 32 Kotlin files — no parse errors.
+- ✅ Built-in Kotlin rules run and report `Found no violations` (0 findings, as expected from
+  a 3-rule set).
+- ✅ CPD finds 8 duplications at 50 tokens; threshold curve captured in §5.2b.
+- ✅ `pmd ast-dump --language kotlin` works, so custom XPath rules are authorable.
+- ⚠️ PMD warns `No auxClasspath configured for Kotlin; type resolution will not work`. Harmless
+  for CPD and the current rules; would matter for type-dependent custom rules.
+
+**Still to verify during implementation:**
+
 1. **detekt version** — apply `dev.detekt` 2.0.0-alpha.6; run `./gradlew detekt`.
    *Pass:* completes and reports findings. *Fail:* fall back to 1.23.8 without type
    resolution and re-test.
-2. **PMD produces zero tasks** — apply the `pmd` plugin; run `./gradlew tasks --all | grep -i pmd`.
-   *Expected:* no per-variant tasks, or tasks that analyse 0 files. **Capture this output —
-   it is write-up evidence.**
+2. **PMD via Gradle, not CLI** — does a manually registered `Pmd` task actually route `.kt`
+   files to the Kotlin module (§5.5 route 1)? *Fail:* fall back to `JavaExec`.
 3. **Error Prone never runs** — apply `net.ltgt.errorprone`; run
    `./gradlew clean :app:assembleDebug`. *Expected:* `compileDebugJavaWithJavac NO-SOURCE`.
-   **Capture this too.**
+   **Capture this output — it is write-up evidence.**
 4. **Gate actually fails** — introduce a deliberate violation, confirm `./gradlew check`
    exits non-zero, then revert. A gate never observed failing is not known to work.
 5. **CI parity** — confirm the workflow passes on Temurin 21, not just JBR 25 locally.
@@ -244,10 +322,13 @@ Ordered, each with a pass criterion. Assumption-checking, not hope.
 
 ## 9. Write-up outline (the one-page deliverable)
 
-1. **Tool/language mismatch.** PMD and Error Prone are Java-only; this project is 32 Kotlin
-   files and 0 Java files. Evidence: `NO-SOURCE`, zero PMD tasks.
-2. **What caught something real.** The hardcoded `API_KEY`; the bare `catch (Exception)`;
-   the duplicated form scaffolds.
+1. **Tool/language fit is not all-or-nothing.** Error Prone is structurally inert here (javac
+   plugin, `NO-SOURCE`). PMD *does* read Kotlin — but its rule *coverage* is three rules,
+   which found nothing, while its *duplicate detector* found eight real duplications. "Does
+   the tool support the language" and "does the tool have rules worth running" are different
+   questions, and only the second one matters.
+2. **What caught something real.** CPD independently rediscovered the two superseded Activity
+   files (6 of 8 duplications); the hardcoded `API_KEY`; the bare `catch (Exception)`.
 3. **What produced noise.** `MagicNumber` and `LongMethod` on Compose — not because the rules
    are wrong, but because their defaults assume imperative Kotlin, not declarative UI.
 4. **Threshold change.** Google's static-analysis work found that code review checks need
@@ -266,8 +347,10 @@ Your Code Starts to Smell Bad," IEEE TSE 43(11), 2017 · detekt compatibility ta
 
 ## 10. Open questions
 
-1. **Instructor sign-off.** Adding detekt is a deviation from the literal wording, even though
-   PMD and Error Prone are still present as assigned. Worth confirming before submission.
+1. ~~**Instructor sign-off.**~~ **Resolved 2026-09-12:** requirement confirmed as *PMD working
+   and detekt working*. Both are now genuinely functional (PMD via CPD + built-in rules).
+   Error Prone is retained because the assignment slide names it, but it cannot fire; drop it
+   if the instructor confirms it is not required.
 2. **detekt alpha vs stable** — resolved by verification step 1, not by argument.
 3. **Does fix #5 (`API_KEY` → `BuildConfig`) belong in this PR?** It is a genuine security fix
    and a legitimate finding, but it touches shared build config and the key needs rotating

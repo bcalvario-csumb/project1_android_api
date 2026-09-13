@@ -22,3 +22,4 @@ class ProductsCache(context: Context) {
         return p.getString("cached_products", null)
     }
 }
+

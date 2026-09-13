@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<ruleset name="kotlin-all"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0">
+  <description>
+    All three built-in PMD Kotlin rules. PMD's Kotlin coverage is deliberately small;
+    the bulk of PMD's value on this project comes from CPD (see the cpdKotlin task).
+  </description>
+  <rule ref="category/kotlin/bestpractices.xml"/>
+  <rule ref="category/kotlin/errorprone.xml"/>
+</ruleset>
