@@ -51,14 +51,14 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         }.fold(onSuccess = { it }, onFailure = { HomeUiState.Error(it.message ?: "Unknown Error") })
     }
 
-    fun tradeCard(database: GameDatabase?, currentUserId: Int, targetUserId: Int, cardId: Int, username: String) = viewModelScope.launch {
+    fun tradeCard(database: GameDatabase?, currentUserId: Int, targetUserId: Int, cardId: Int, cardCost: Int, username: String) = viewModelScope.launch {
         if (database == null) {
             return@launch
         }
 
         try {
             database.userHasCardDao().removeCardFromUser(currentUserId, cardId)
-            database.userDao().updatePoints(currentUserId, -20)
+            database.userDao().updatePoints(currentUserId, -cardCost)
             try {
                 database.userHasCardDao().insertUserCard(UserHasCard(userId = targetUserId, cardId = cardId))
             } catch (e: Exception) {

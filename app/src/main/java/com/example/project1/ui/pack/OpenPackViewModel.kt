@@ -47,10 +47,16 @@ class OpenPackViewModel(application: Application) : AndroidViewModel(application
             val cardsToOpen = List(products.length()) { index ->
                 val product = products.getJSONObject(index)
 
+                val rng = (1..100).random()
+                val tierCost = when (rng) {
+                    100 -> 100
+                    in 90..99 -> 50
+                    else -> 20
+                }
                 Card(
                     name = product.getString("name"),
                     description = product.getString("description"),
-                    cost = 20,
+                    cost = tierCost,
                     img = product.getString("image"),
                 )
             }
@@ -68,7 +74,7 @@ class OpenPackViewModel(application: Application) : AndroidViewModel(application
                 card.copy(id = newCardId)
             }
 
-            val pointsEarned = openedCards.size * 20
+            val pointsEarned = openedCards.sumOf { it.cost }
             database.userDao().updatePoints(user.id, pointsEarned)
 
             PackUiState.Success(openedCards)
