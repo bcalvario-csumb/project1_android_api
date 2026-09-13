@@ -14,4 +14,7 @@ interface UserDAO {
 
    @Query("SELECT * FROM users WHERE email = :email AND password = :password LIMIT 1")
    suspend fun validateLogin(email: String, password: String): User?
+
+   @Query("UPDATE users SET points = points + :amount WHERE id = :userId")
+   suspend fun updatePoints(userId: Int, amount: Int)
 }
