@@ -25,7 +25,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    fun load (database: GameDatabase?, username: String) = viewModelScope.launch {
+    fun load(database: GameDatabase?, username: String) = viewModelScope.launch {
         _uiState.value = HomeUiState.Loading
 
         if (database == null) {
@@ -44,23 +44,29 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
 
         _uiState.value = runCatching {
-            val user = database.userDao().getUserByEmail(username) ?: throw Exception("User not found")
+            val user =
+                database.userDao().getUserByEmail(username) ?: throw Exception("User not found")
             val userCards = database.userHasCardDao().getCardsForUser(user.id)
             HomeUiState.Success(userId = user.id, cards = userCards, points = user.points)
         }.fold(onSuccess = { it }, onFailure = { HomeUiState.Error(it.message ?: "Unknown Error") })
     }
 
     fun tradeCard(database: GameDatabase?, currentUserId: Int, targetUserId: Int, cardId: Int, username: String) = viewModelScope.launch {
-        if (database != null) {
+        if (database == null) {
+            return@launch
+        }
+
+        try {
             database.userHasCardDao().removeCardFromUser(currentUserId, cardId)
-            database.userHasCardDao().insertUserCard(
-                UserHasCard(
-                    userId = targetUserId,
-                    cardId = cardId
-                )
-            )
             database.userDao().updatePoints(currentUserId, -20)
+            try {
+                database.userHasCardDao().insertUserCard(UserHasCard(userId = targetUserId, cardId = cardId))
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Target user $targetUserId does not exist. Card discarded.")
+            }
             load(database, username)
+        } catch (e: Exception) {
+            _uiState.value = HomeUiState.Error(e.message ?: "Trade transaction failed")
         }
     }
 }

@@ -2,7 +2,6 @@ package com.example.project1.ui.pack
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.project1.data.ProductsCache
 import com.example.project1.database.GameDatabase
