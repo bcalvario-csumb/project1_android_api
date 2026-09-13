@@ -105,6 +105,7 @@ fun HomeScreen(
                                             s.userId,
                                             2,
                                             card.id,
+                                            card.cost,
                                             username
                                         )
                                     }) {
