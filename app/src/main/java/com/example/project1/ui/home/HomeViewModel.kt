@@ -17,7 +17,7 @@ import androidx.lifecycle.AndroidViewModel
 import com.example.project1.data.ProductsCache
 sealed interface HomeUiState{
     data object Loading : HomeUiState
-    data class Success (val userId: Int, val cards: List<Card>) : HomeUiState
+    data class Success (val userId: Int, val cards: List<Card>, val points: Int) : HomeUiState
     data class Error (val message : String) : HomeUiState
 }
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
@@ -46,7 +46,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value = runCatching {
             val user = database.userDao().getUserByEmail(username) ?: throw Exception("User not found")
             val userCards = database.userHasCardDao().getCardsForUser(user.id)
-            HomeUiState.Success(userId = user.id, cards = userCards)
+            HomeUiState.Success(userId = user.id, cards = userCards, points = user.points)
         }.fold(onSuccess = { it }, onFailure = { HomeUiState.Error(it.message ?: "Unknown Error") })
     }
 
@@ -59,6 +59,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                     cardId = cardId
                 )
             )
+            database.userDao().updatePoints(currentUserId, -20)
             load(database, username)
         }
     }

@@ -76,6 +76,8 @@ fun HomeScreen(
                 }
 
                 is HomeUiState.Success -> {
+                    Text("Total Points: ${s.points}", style = MaterialTheme.typography.headlineSmall)
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text("Your Deck (${s.cards.size} Cards)")
                     Spacer(modifier = Modifier.height(16.dp))
                     LazyColumn(modifier = Modifier.weight(1f)) {

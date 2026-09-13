@@ -69,6 +69,9 @@ class OpenPackViewModel(application: Application) : AndroidViewModel(application
                 card.copy(id = newCardId)
             }
 
+            val pointsEarned = openedCards.size * 20
+            database.userDao().updatePoints(user.id, pointsEarned)
+
             PackUiState.Success(openedCards)
         }.getOrElse { error ->
             PackUiState.Error(
