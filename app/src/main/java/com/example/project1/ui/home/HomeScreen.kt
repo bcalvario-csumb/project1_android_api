@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material3.Card as ComposeCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.project1.database.GameDatabase
-import com.example.project1.database.entities.Card
+import com.example.project1.database.entities.Card as GameCard
 import androidx.compose.foundation.lazy.items
 
 /**
@@ -76,11 +76,13 @@ fun HomeScreen(
                 }
 
                 is HomeUiState.Success -> {
+                    Text("Total Points: ${s.points}", style = MaterialTheme.typography.headlineSmall)
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text("Your Deck (${s.cards.size} Cards)")
                     Spacer(modifier = Modifier.height(16.dp))
                     LazyColumn(modifier = Modifier.weight(1f)) {
                         items(s.cards) { card ->
-                            Card(modifier = Modifier
+                            ComposeCard(modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp)) {
                                 Row(
@@ -103,6 +105,7 @@ fun HomeScreen(
                                             s.userId,
                                             2,
                                             card.id,
+                                            card.cost,
                                             username
                                         )
                                     }) {
