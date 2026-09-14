@@ -1,6 +1,7 @@
 package com.example.project1.ui.pack
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.example.project1.data.ProductsRepository
+import okhttp3.OkHttpClient
 import org.json.JSONObject
 
 sealed interface PackUiState {
@@ -36,15 +38,11 @@ class OpenPackViewModel(application: Application) : AndroidViewModel(application
                     ?: throw Exception("Signed in user was not found")
 
             val responseText = repo.fetchRandomProduct()
-
             val responseJson = JSONObject(responseText)
-
             val products = responseJson.getJSONArray("data")
-
             if (products.length() == 0) {
                 throw Exception("The API did not return any products")
             }
-
             val cardsToOpen = List(products.length()) { index ->
                 val product = products.getJSONObject(index)
 

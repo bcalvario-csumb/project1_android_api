@@ -4,6 +4,9 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.errorprone)
+    id("pmd")
 }
 
 android {
@@ -36,6 +39,21 @@ android {
         compose = true
     }
 }
+
+pmd {
+    toolVersion = libs.versions.pmd.get()
+    isIgnoreFailures = false
+    ruleSetFiles = files("$rootDir/config/pmd/kotlin-ruleset.xml")
+    // Clear the default Java rulesets — they do not apply to Kotlin sources.
+    ruleSets = emptyList()
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    ignoreFailures = false
+}
+
 room {
     schemaDirectory("$projectDir/schemas")
 }
@@ -65,6 +83,17 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
 
+    // The Kotlin language module must be on PMD's tool classpath or .kt files are skipped.
+    pmd("net.sourceforge.pmd:pmd-kotlin:${libs.versions.pmd.get()}")
+    pmd("net.sourceforge.pmd:pmd-ant:${libs.versions.pmd.get()}")
+
+    // Error Prone is a javac plugin. This module has 0 Java files, so compileDebugJavaWithJavac
+    // is NO-SOURCE and Error Prone never executes. Wired because the assignment names it; the
+    // empty result is documented in the triage report.
+    // Note: error_prone_core 2.50 requires JDK 21+ (JBR 25 satisfies this), and the plugin
+    // automatically forks the compiler with the --add-exports/--add-opens that JDK 16+ needs.
+    errorprone(libs.errorprone.core)
+
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -72,4 +101,48 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+tasks.register<Pmd>("pmdKotlin") {
+    group = "verification"
+    description = "Runs PMD's Kotlin rules over app/src/main/java (**/*.kt)."
+    // `source` exposes only a getter on SourceTask; use setSource() in the Kotlin DSL.
+    setSource(fileTree("src/main/java"))
+    include("**/*.kt")
+    exclude("**/build/**")
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+// Gradle's pmd plugin does not expose CPD at all, so copy-paste detection is run
+// directly via the PMD CLI distribution instead of a plugin-provided task.
+val pmdCli: Configuration by configurations.creating
+
+dependencies {
+    pmdCli("net.sourceforge.pmd:pmd-dist:${libs.versions.pmd.get()}")
+}
+
+// CPD finds duplicated token sequences. Threshold chosen from a measured curve:
+// 40 -> 10 findings, 50 -> 8, 75 -> 7, 100 -> 6, 150 -> 1. 50 catches the real screen
+// duplication without flagging boilerplate.
+tasks.register<JavaExec>("cpdKotlin") {
+    group = "verification"
+    description = "Runs CPD copy-paste detection over the Kotlin sources."
+    classpath = pmdCli
+    mainClass.set("net.sourceforge.pmd.cli.PmdCli")
+    args = listOf(
+        "cpd",
+        "--dir", "$projectDir/src/main/java",
+        "--language", "kotlin",
+        "--minimum-tokens", "50",
+        "--format", "text",
+    )
+}
+
+// `check` already depends on lint and testDebugUnitTest via AGP. Adding these makes
+// `./gradlew check` the single command the CI workflow runs.
+tasks.named("check") {
+    dependsOn("detekt", "pmdKotlin", "cpdKotlin")
 }

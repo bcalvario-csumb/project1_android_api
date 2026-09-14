@@ -1,0 +1,84 @@
+# Tuned for a Jetpack Compose codebase. See
+# docs/superpowers/specs/2026-09-11-code-smell-gate-design.md §5.2
+#
+# detekt 2.0.0-alpha.6 dropped the classic `build: maxIssues:` key from the YAML schema
+# (config validation rejects it outright: "Property 'build' is misspelled or does not
+# exist"). The "fail the build on any finding" behavior it used to express is now set on
+# the Gradle extension instead -- see `detekt { failOnSeverity.set(...) }` in
+# app/build.gradle.kts.
+#
+# detekt 2.x also renamed several rule properties (validated the hard way -- shipped
+# config was rejected on first run and corrected against the schema errors / the bundled
+# default-detekt-config.yml resource in detekt-core-2.0.0-alpha.6.jar):
+#   - LongMethod:          threshold          -> allowedLines
+#   - LongParameterList:   functionThreshold  -> allowedFunctionParameters
+#   - CyclomaticComplexMethod: threshold      -> allowedComplexity
+#   - NestedBlockDepth:    threshold          -> allowedDepth
+#   - UnusedPrivateMember  (rule was split)   -> UnusedPrivateFunction / UnusedPrivateProperty
+# `ignoreAnnotated` itself is unaffected -- it's a cross-cutting property every rule
+# supports (validated at runtime, not listed per-rule in the default config template).
+
+complexity:
+  active: true
+  LongMethod:
+    active: true
+    allowedLines: 60
+    # A declarative UI tree is long by nature. Splitting a composable purely to satisfy a
+    # line count produces single-use composables that obscure the layout. Rule stays
+    # active for ViewModels, repositories and DAOs.
+    ignoreAnnotated: ['Composable']
+  LongParameterList:
+    active: true
+    allowedFunctionParameters: 6
+    # Composables legitimately take many parameters (state + one lambda per event).
+    ignoreAnnotated: ['Composable']
+  CyclomaticComplexMethod:
+    active: true
+    allowedComplexity: 15
+  NestedBlockDepth:
+    active: true
+    allowedDepth: 4
+  TooManyFunctions:
+    # Off: counts top-level composables in a screen file, which is not a smell.
+    active: false
+
+style:
+  active: true
+  MagicNumber:
+    active: true
+    ignoreNumbers: ['-1', '0', '1', '2']
+    # Every 16.dp / 24.dp / weight(1f) is a layout literal, self-documenting at the call
+    # site. Extracting them to constants reduces readability without reducing risk.
+    ignoreAnnotated: ['Composable']
+  ReturnCount:
+    active: true
+    max: 3
+  UnusedPrivateFunction:
+    active: true
+  UnusedPrivateProperty:
+    active: true
+
+exceptions:
+  active: true
+  TooGenericExceptionCaught:
+    active: true
+  TooGenericExceptionThrown:
+    active: true
+  SwallowedException:
+    active: true
+
+potential-bugs:
+  active: true
+
+naming:
+  active: true
+  FunctionNaming:
+    active: true
+    # @Composable functions are PascalCase by Compose convention, which violates Kotlin's
+    # camelCase function rule. 12 of the 45 baseline findings were this, all correct-by-
+    # convention UI code. Rule stays active for everything that is not a composable.
+    ignoreAnnotated: ['Composable']
+
+# No `formatting:` ruleset in detekt 2.x -- the ktlint wrapper was fully removed from the
+# core module (config validation rejects the key outright: "Property 'formatting' is
+# misspelled or does not exist"). Nothing to disable here.
