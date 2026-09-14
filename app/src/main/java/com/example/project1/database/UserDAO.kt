@@ -17,4 +17,10 @@ interface UserDAO {
 
    @Query("UPDATE users SET points = points + :amount WHERE id = :userId")
    suspend fun updatePoints(userId: Int, amount: Int)
+
+   @Query("UPDATE users SET totalCardsOpened = totalCardsOpened + :total, " + "commonOpened = commonOpened + :common, uniqueOpened = uniqueOpened + :unique, legendaryOpened = legendaryOpened + :legendary WHERE id = :userId")
+   suspend fun incrementOpenedStats(userId: Int, total: Int, common: Int, unique: Int, legendary: Int)
+
+   @Query("UPDATE users SET totalCardsTraded = totalCardsTraded + 1 WHERE id = :userId")
+   suspend fun incrementTradedStat(userId: Int)
 }
