@@ -44,14 +44,17 @@ class OpenPackViewModel(application: Application) : AndroidViewModel(application
                 throw Exception("The API did not return any products")
             }
 
+            var commonCount = 0
+            var uniqueCount = 0
+            var legendaryCount = 0
             val cardsToOpen = List(products.length()) { index ->
                 val product = products.getJSONObject(index)
 
                 val rng = (1..100).random()
                 val tierCost = when (rng) {
-                    100 -> 100
-                    in 90..99 -> 50
-                    else -> 20
+                    100 -> { legendaryCount++; 100 }
+                    in 90..99 -> { uniqueCount++; 50 }
+                    else -> { commonCount++; 20 }
                 }
                 Card(
                     name = product.getString("name"),
@@ -76,6 +79,7 @@ class OpenPackViewModel(application: Application) : AndroidViewModel(application
 
             val pointsEarned = openedCards.sumOf { it.cost }
             database.userDao().updatePoints(user.id, pointsEarned)
+            database.userDao().incrementOpenedStats(user.id, openedCards.size, commonCount, uniqueCount, legendaryCount)
 
             PackUiState.Success(openedCards)
         }.getOrElse { error ->
