@@ -25,7 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.project1.database.GameDatabase
-import com.example.project1.database.entities.Card as GameCard
+import com.example.project1.database.entities.Card
+import com.example.project1.ui.login.admin.ADMIN_EMAIL
 import androidx.compose.foundation.lazy.items
 
 /**
@@ -39,6 +40,7 @@ fun HomeScreen(
     database: GameDatabase?,
     username: String,
     onOpenPack: () -> Unit,
+    onOpenAdmin: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel(),
@@ -133,6 +135,13 @@ fun HomeScreen(
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))
+            // Gated on a hardcoded email for now — see ADMIN_EMAIL in AdminViewModel.kt
+            // for how to replace this with a real isAdmin column.
+            if (username == ADMIN_EMAIL) {
+                TextButton(onClick = onOpenAdmin) {
+                    Text("Admin Panel")
+                }
+            }
             TextButton(onClick = onLogout) {
                 Text("Log Out")
             }

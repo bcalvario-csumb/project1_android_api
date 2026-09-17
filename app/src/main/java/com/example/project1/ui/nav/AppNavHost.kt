@@ -10,6 +10,7 @@ import com.example.project1.ui.home.HomeScreen
 import com.example.project1.ui.login.LoginScreen
 import com.example.project1.ui.signup.SignUpScreen
 import com.example.project1.database.GameDatabase
+import com.example.project1.ui.login.admin.AdminScreen
 import com.example.project1.ui.pack.OpenPackScreen
 import kotlinx.serialization.Serializable
 
@@ -36,6 +37,10 @@ data class HomeRoute(val username: String)
 
 @Serializable
 data class OpenPackRoute(val username: String)
+
+// No arguments: the admin panel shows every user, so there is nothing to pass in.
+@Serializable
+object AdminRoute
 
 @Composable
 fun AppNavHost(
@@ -89,6 +94,7 @@ fun AppNavHost(
                         )
                     )
                 },
+                onOpenAdmin = { navController.navigate(AdminRoute) },
                 onLogout = {
                     navController.navigate(LoginRoute) {
                         popUpTo<HomeRoute> { inclusive = true }
@@ -104,6 +110,13 @@ fun AppNavHost(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
+            )
+        }
+        // No toRoute() here: AdminRoute is an object, so there are no arguments to read.
+        composable<AdminRoute> {
+            AdminScreen(
+                database = database,
+                onNavigateBack = { navController.popBackStack() },
             )
         }
     }

@@ -1,6 +1,7 @@
 package com.example.project1.ui.pack
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.project1.data.ProductsCache
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.example.project1.data.ProductsRepository
+import okhttp3.OkHttpClient
 import org.json.JSONObject
 
 sealed interface PackUiState {
