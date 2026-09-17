@@ -47,6 +47,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.animation.core.LinearEasing
@@ -371,7 +372,9 @@ private fun PlayingCardContent(
                     .weight(1f)
                     .then(
                         if (expanded) {
-                            Modifier.verticalScroll(descriptionScrollState)
+                            Modifier
+                                .verticalScroll(descriptionScrollState)
+                                .testTag("expanded_card_description")
                         } else {
                             Modifier
                         }
@@ -452,4 +455,3 @@ private fun LegendaryFoilOverlay(
         )
     }
 }
-
