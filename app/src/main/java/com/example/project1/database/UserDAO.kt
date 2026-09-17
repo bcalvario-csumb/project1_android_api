@@ -15,6 +15,15 @@ interface UserDAO {
    @Query("SELECT * FROM users WHERE email = :email AND password = :password LIMIT 1")
    suspend fun validateLogin(email: String, password: String): User?
 
+   @Query("UPDATE users SET points = points + :amount WHERE id = :userId")
+   suspend fun updatePoints(userId: Int, amount: Int)
+
+   @Query("UPDATE users SET totalCardsOpened = totalCardsOpened + :total, " + "commonOpened = commonOpened + :common, uniqueOpened = uniqueOpened + :unique, legendaryOpened = legendaryOpened + :legendary WHERE id = :userId")
+   suspend fun incrementOpenedStats(userId: Int, total: Int, common: Int, unique: Int, legendary: Int)
+
+   @Query("UPDATE users SET totalCardsTraded = totalCardsTraded + 1 WHERE id = :userId")
+   suspend fun incrementTradedStat(userId: Int)
+
    /**
     * Every user plus how many cards they own, for the admin panel.
     *

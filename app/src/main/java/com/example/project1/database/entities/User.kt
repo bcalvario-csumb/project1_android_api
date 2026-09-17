@@ -8,5 +8,11 @@ data class User (
     val id: Int = 0,
     val email: String,
     val password: String,
-    val name: String
+    val name: String,
+    val points: Int = 0,
+    val totalCardsOpened: Int = 0,
+    val totalCardsTraded: Int = 0,
+    val commonOpened: Int = 0,
+    val uniqueOpened: Int = 0,
+    val legendaryOpened: Int = 0
 )

@@ -3,7 +3,6 @@ package com.example.project1.ui.pack
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.project1.data.ProductsCache
 import com.example.project1.database.GameDatabase
@@ -38,18 +37,31 @@ class OpenPackViewModel(application: Application) : AndroidViewModel(application
                     ?: throw Exception("Signed in user was not found")
 
             val responseText = repo.fetchRandomProduct()
+
             val responseJson = JSONObject(responseText)
+
             val products = responseJson.getJSONArray("data")
+
             if (products.length() == 0) {
                 throw Exception("The API did not return any products")
             }
+
+            var commonCount = 0
+            var uniqueCount = 0
+            var legendaryCount = 0
             val cardsToOpen = List(products.length()) { index ->
                 val product = products.getJSONObject(index)
 
+                val rng = (1..100).random()
+                val tierCost = when (rng) {
+                    100 -> { legendaryCount++; 100 }
+                    in 90..99 -> { uniqueCount++; 50 }
+                    else -> { commonCount++; 20 }
+                }
                 Card(
                     name = product.getString("name"),
                     description = product.getString("description"),
-                    cost = 20,
+                    cost = tierCost,
                     img = product.getString("image"),
                 )
             }
@@ -66,6 +78,10 @@ class OpenPackViewModel(application: Application) : AndroidViewModel(application
 
                 card.copy(id = newCardId)
             }
+
+            val pointsEarned = openedCards.sumOf { it.cost }
+            database.userDao().updatePoints(user.id, pointsEarned)
+            database.userDao().incrementOpenedStats(user.id, openedCards.size, commonCount, uniqueCount, legendaryCount)
 
             PackUiState.Success(openedCards)
         }.getOrElse { error ->

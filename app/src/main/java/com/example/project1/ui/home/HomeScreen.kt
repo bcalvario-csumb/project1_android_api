@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material3.Card as ComposeCard
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -78,11 +78,28 @@ fun HomeScreen(
                 }
 
                 is HomeUiState.Success -> {
+                    ComposeCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+                            Text("Lifetime Stats", style = MaterialTheme.typography.titleMedium)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Cards Opened: ${s.totalOpened}", style = MaterialTheme.typography.headlineSmall)
+                            Text("Cards Traded: ${s.totalTraded}", style = MaterialTheme.typography.headlineSmall)
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Common Pulls: ${s.commonOpened}", style = MaterialTheme.typography.bodyMedium)
+                            Text("Unique Pulls: ${s.uniqueOpened}", style = MaterialTheme.typography.bodyMedium)
+                            Text("Legendary Pulls: ${s.legendaryOpened}", style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text("Total Points: ${s.points}", style = MaterialTheme.typography.headlineSmall)
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text("Your Deck (${s.cards.size} Cards)")
                     Spacer(modifier = Modifier.height(16.dp))
                     LazyColumn(modifier = Modifier.weight(1f)) {
                         items(s.cards) { card ->
-                            Card(modifier = Modifier
+                            ComposeCard(modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp)) {
                                 Row(
@@ -105,6 +122,7 @@ fun HomeScreen(
                                             s.userId,
                                             2,
                                             card.id,
+                                            card.cost,
                                             username
                                         )
                                     }) {

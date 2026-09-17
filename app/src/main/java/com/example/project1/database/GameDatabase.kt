@@ -5,7 +5,7 @@ import com.example.project1.database.entities.Card
 import com.example.project1.database.entities.User
 import com.example.project1.database.entities.UserHasCard
 
-@Database(entities = [User::class, Card::class, UserHasCard::class], version = 1, exportSchema = true)
+@Database(entities = [User::class, Card::class, UserHasCard::class], version = 3, exportSchema = true)
 abstract class GameDatabase : RoomDatabase() {
     abstract fun userDao(): UserDAO
     abstract fun cardDao(): CardDAO
