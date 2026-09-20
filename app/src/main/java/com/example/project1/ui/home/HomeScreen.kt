@@ -1,5 +1,6 @@
 package com.example.project1.ui.home
 
+import android.graphics.Typeface
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +16,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card as ComposeCard
@@ -32,7 +32,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -47,6 +46,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -61,6 +61,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.getValue
+import androidx.compose.material3.CardDefaults
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 
 
 /**
@@ -224,10 +229,13 @@ private fun PlayingCard(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(5f / 7f),
-        shape = RoundedCornerShape(16.dp),
+        shape = RectangleShape,
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF174A68),
+        ),
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant,
+            color = Color(0xFF174A68),
         ),
     ) {
         PlayingCardContent(
@@ -261,10 +269,13 @@ private fun ExpandedCardDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(5f / 7f),
-                shape = RoundedCornerShape(20.dp),
+                shape = RectangleShape,
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF174A68),
+                ),
                 border = BorderStroke(
                     width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant,
+                    color = Color(0xFF174A68),
                 ),
             ) {
                 PlayingCardContent(
@@ -302,10 +313,15 @@ private fun PlayingCardContent(
     card: Card,
     expanded: Boolean,
 ) {
+    val cardBlue = Color(0xFFD9F3FA)
+    val cardDarkBlue = Color(0xFF174A68)
+    val cardFont = FontFamily(Typeface.create("sans-serif-condensed", Typeface.NORMAL))
+
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .padding(8.dp),
+            .padding(7.dp)
+            .background(cardBlue),
     ) {
         val titleHeight = 24.dp
 
@@ -323,9 +339,15 @@ private fun PlayingCardContent(
             Text(
                 text = card.name,
                 style = if (expanded) {
-                    MaterialTheme.typography.titleMedium
+                    MaterialTheme.typography.titleMedium.copy(
+                        fontFamily = cardFont,
+                        fontWeight = FontWeight.ExtraBold,
+                    )
                 } else {
-                    MaterialTheme.typography.labelLarge
+                    MaterialTheme.typography.labelLarge.copy(
+                        fontFamily = cardFont,
+                        fontWeight = FontWeight.ExtraBold,
+                    )
                 },
                 maxLines = 1,
                 softWrap = false,
@@ -333,7 +355,7 @@ private fun PlayingCardContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(titleHeight)
-                    .padding(horizontal = 2.dp)
+                    .padding(horizontal = 5.dp)
                     .basicMarquee(
                         iterations = Int.MAX_VALUE,
                     ),
@@ -345,14 +367,18 @@ private fun PlayingCardContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(imageHeight)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                    .padding(horizontal = 6.dp)
+                    .background(cardDarkBlue)
+                    .padding(2.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 if (card.img.isBlank()) {
                     Text(
                         text = "No image",
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontFamily = cardFont,
+                        ),
+                        color = Color.White,
                     )
                 } else {
                     AsyncImage(
@@ -370,6 +396,7 @@ private fun PlayingCardContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
+                    .padding(horizontal = 5.dp, vertical = 4.dp)
                     .then(
                         if (expanded) {
                             Modifier
@@ -382,7 +409,13 @@ private fun PlayingCardContent(
             ) {
                 Text(
                     text = card.description,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontFamily = cardFont,
+                        fontSize = 10.sp,
+                        lineHeight = 12.sp,
+                    ),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
                     maxLines = if (expanded) {
                         Int.MAX_VALUE
                     } else {
@@ -395,10 +428,23 @@ private fun PlayingCardContent(
                     },
                 )
             }
+
+            Text(
+                text = "Price: ${card.cost}",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontFamily = cardFont,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 5.dp, bottom = 4.dp),
+                textAlign = TextAlign.Start,
+            )
         }
 
         // This is now a layered child of BoxWithConstraints.
-        if (card.cost > 0) {
+        if (card.cost > 20) {
             LegendaryFoilOverlay(
                 modifier = Modifier.fillMaxSize(),
             )
@@ -415,11 +461,11 @@ private fun LegendaryFoilOverlay(
     )
 
     val foilOffset by infiniteTransition.animateFloat(
-        initialValue = -1f,
+        initialValue = -3f,
         targetValue = 2f,
         animationSpec = infiniteRepeatable(
             animation = tween(
-                durationMillis = 2200,
+                durationMillis = 6600,
                 easing = LinearEasing,
             ),
             repeatMode = RepeatMode.Restart,
