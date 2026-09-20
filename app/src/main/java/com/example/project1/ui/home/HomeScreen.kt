@@ -246,6 +246,31 @@ private fun PlayingCard(
 }
 
 @Composable
+internal fun ExpandedTradingCard(
+    card: Card,
+    modifier: Modifier = Modifier,
+) {
+    ComposeCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(5f / 7f),
+        shape = RectangleShape,
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF174A68),
+        ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = Color(0xFF174A68),
+        ),
+    ) {
+        PlayingCardContent(
+            card = card,
+            expanded = true,
+        )
+    }
+}
+
+@Composable
 private fun ExpandedCardDialog(
     card: Card,
     onDismiss: () -> Unit,
@@ -265,24 +290,7 @@ private fun ExpandedCardDialog(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ComposeCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(5f / 7f),
-                shape = RectangleShape,
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF174A68),
-                ),
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = Color(0xFF174A68),
-                ),
-            ) {
-                PlayingCardContent(
-                    card = card,
-                    expanded = true,
-                )
-            }
+            ExpandedTradingCard(card = card)
 
             Row(
                 modifier = Modifier
