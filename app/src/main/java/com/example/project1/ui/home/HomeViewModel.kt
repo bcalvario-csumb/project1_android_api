@@ -33,15 +33,19 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             return@launch
         }
 
-        //making sure the apiData makes it this far
-        runCatching {
-            repo.fetchProducts()
-        }.onSuccess { response ->
-            Log.d("HomeViewModel", "API data received: ${response.length} characters")
-        }.onFailure { error ->
-            Log.e("HomeViewModel", "API unavailable", error)
-        }
-
+        // NOTE: this used to call repo.fetchProducts() here and do nothing with the
+        // result except log its length. That was a full ~8.6 KB network round trip on
+        // every visit to Home and on every Retry, whose only output was a log line --
+        // the cards below come from Room, not from that response. Removed.
+        //
+        // It did have one side effect: saving the response kept the catalogue cache
+        // warm. That job now lives, deliberately and TTL-guarded, in OpenPackViewModel,
+        // the only screen that reads the catalogue.
+        //
+        // Cards are read from the local database, which is the single source of truth
+        // for this screen. Per Android's data-layer guidance, network data should reach
+        // the UI *through* that local store rather than alongside it:
+        // https://developer.android.com/topic/architecture/data-layer/offline-first
 
         _uiState.value = runCatching {
             val user =
