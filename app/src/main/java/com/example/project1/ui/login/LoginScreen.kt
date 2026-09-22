@@ -27,6 +27,9 @@ import com.example.project1.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import android.util.Log
+import android.util.Patterns
+import androidx.compose.material3.MaterialTheme
 
 /**
  * Login screen.
@@ -80,6 +83,15 @@ fun LoginScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
+            if (errorMessage.isNotBlank()) {
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+
             // TODO(team): there is no credential check yet — this accepts anything
             //   non-blank. Real auth goes in a LoginViewModel that calls
             //   UserDAO.getUserByUsername() and compares the password, exposing a
@@ -87,14 +99,52 @@ fun LoginScreen(
             //   does. Only call onLoginSuccess once the check actually passes.
             Button(
                 onClick = {
+                    errorMessage = ""
+
+                    val normalizedEmail = email.trim()
+
+                    when {
+                        normalizedEmail.isBlank() -> {
+                            errorMessage = "Please enter your email."
+                            return@Button
+                        }
+
+                        !Patterns.EMAIL_ADDRESS.matcher(normalizedEmail).matches() -> {
+                            errorMessage = "Please enter a valid email address."
+                            return@Button
+                        }
+
+                        password.isBlank() -> {
+                            errorMessage = "Please enter your password."
+                            return@Button
+                        }
+                    }
+
                     coroutineScope.launch {
-                        val validUser = database?.userDao()?.validateLogin(email, password)
-                        if (validUser != null) {
-                            withContext(Dispatchers.Main.immediate) {
-                                onLoginSuccess(validUser.email)
+                        try {
+                            val db = database
+
+                            if (db == null) {
+                                Log.e("LoginScreen", "Database was null")
+                                errorMessage = "Unable to access the database."
+                                return@launch
                             }
-                        } else {
-                            errorMessage = "Invalid email or password"
+
+                            val user = db.userDao().validateLogin(
+                                email = normalizedEmail,
+                                password = password
+                            )
+
+                            if (user == null) {
+                                // Use one generic message for both cases.
+                                // This avoids revealing whether an email exists.
+                                errorMessage = "Incorrect email or password."
+                            } else {
+                                onLoginSuccess(user.email)
+                            }
+                        } catch (exception: Exception) {
+                            Log.e("LoginScreen", "Login failed", exception)
+                            errorMessage = "Unable to log in. Please try again."
                         }
                     }
                 },

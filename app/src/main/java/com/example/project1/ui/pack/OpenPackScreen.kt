@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -24,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.project1.database.GameDatabase
+import com.example.project1.ui.home.ExpandedTradingCard
 
 @Composable
 fun OpenPackScreen(
@@ -94,23 +94,7 @@ fun OpenPackScreen(
                             Arrangement.spacedBy(8.dp),
                     ) {
                         items(state.cards) { card ->
-                            Card(
-                                modifier =
-                                    Modifier.fillMaxWidth(),
-                            ) {
-                                Column(
-                                    modifier =
-                                        Modifier.padding(16.dp),
-                                ) {
-                                    Text(
-                                        text = card.name,
-                                        style =
-                                            MaterialTheme.typography.titleMedium,
-                                    )
-                                    Text(card.description)
-                                    Text("Cost: ${card.cost}")
-                                }
-                            }
+                            ExpandedTradingCard(card = card)
                         }
                     }
 

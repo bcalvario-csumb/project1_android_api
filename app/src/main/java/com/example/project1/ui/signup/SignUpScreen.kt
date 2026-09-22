@@ -28,6 +28,10 @@ import com.example.project1.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import android.util.Log
+import android.util.Patterns
+import android.database.sqlite.SQLiteConstraintException
+import androidx.compose.material3.MaterialTheme
 
 /**
  * Sign-up screen.
@@ -48,7 +52,12 @@ fun SignUpScreen(
     var confirmPassword by rememberSaveable { mutableStateOf("") }
     var errorMessage by rememberSaveable { mutableStateOf("") }
     val passwordsMatch = password == confirmPassword
-    val canSubmit = email.isNotBlank() && password.isNotBlank() && passwordsMatch
+    val canSubmit =
+        name.isNotBlank() &&
+                email.isNotBlank() &&
+                password.isNotBlank() &&
+                confirmPassword.isNotBlank() &&
+                passwordsMatch
     val coroutineScope = rememberCoroutineScope()
     Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
         Column(
@@ -104,22 +113,89 @@ fun SignUpScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
+            if (errorMessage.isNotBlank()) {
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+
             // TODO(team): no account is actually created yet. Real sign-up goes in a
             //   SignUpViewModel that calls UserDAO.insertUser(). Never store a raw
             //   password, hash it before it reaches the database.
             Button(
                 onClick = {
-                    coroutineScope.launch {
-                        val existingUser = database?.userDao()?.getUserByEmail(email)
-                        if (existingUser != null) {
-                            errorMessage = "An account with this email already exists."
-                        } else {
-                            val newUser = User(name = name, email = email, password = password)
-                            database?.userDao()?.insertUser(newUser)
+                    errorMessage = ""
 
-                            withContext(Dispatchers.Main.immediate) {
-                                onSignUpSuccess(email)
+                    val normalizedName = name.trim()
+                    val normalizedEmail = email.trim()
+
+                    when {
+                        normalizedName.isBlank() -> {
+                            errorMessage = "Please enter your name."
+                            return@Button
+                        }
+
+                        normalizedEmail.isBlank() -> {
+                            errorMessage = "Please enter your email."
+                            return@Button
+                        }
+
+                        !Patterns.EMAIL_ADDRESS.matcher(normalizedEmail).matches() -> {
+                            errorMessage = "Please enter a valid email address."
+                            return@Button
+                        }
+
+                        password.isBlank() -> {
+                            errorMessage = "Please enter a password."
+                            return@Button
+                        }
+
+                        password.length < 8 -> {
+                            errorMessage = "Password must be at least 8 characters."
+                            return@Button
+                        }
+
+                        password != confirmPassword -> {
+                            errorMessage = "Passwords do not match."
+                            return@Button
+                        }
+                    }
+
+                    coroutineScope.launch {
+                        try {
+                            val db = database
+
+                            if (db == null) {
+                                Log.e("SignUpScreen", "Database was null")
+                                errorMessage = "Unable to access the database."
+                                return@launch
                             }
+
+                            val existingUser = db.userDao().getUserByEmail(normalizedEmail)
+
+                            if (existingUser != null) {
+                                errorMessage = "An account with this email already exists."
+                                return@launch
+                            }
+
+                            val newUser = User(
+                                name = normalizedName,
+                                email = normalizedEmail,
+                                password = password
+                            )
+
+                            db.userDao().insertUser(newUser)
+
+                            onSignUpSuccess(normalizedEmail)
+                        } catch (exception: SQLiteConstraintException) {
+                            Log.e("SignUpScreen", "Duplicate user insertion attempted", exception)
+                            errorMessage = "An account with this email already exists."
+                        } catch (exception: Exception) {
+                            Log.e("SignUpScreen", "Signup failed", exception)
+                            errorMessage = "Unable to create your account. Please try again."
                         }
                     }
                 },
