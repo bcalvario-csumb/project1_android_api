@@ -28,6 +28,23 @@ class OpenPackViewModel(application: Application) : AndroidViewModel(application
     private val _uiState = MutableStateFlow<PackUiState>(PackUiState.Ready)
     val uiState: StateFlow<PackUiState> = _uiState.asStateFlow()
 
+    init {
+        // Keep the offline fallback pool warm. When the network fails,
+        // fetchRandomProduct() draws a card from the cached catalogue -- but only if one
+        // has been cached. HomeViewModel used to refresh it as a side effect of a fetch
+        // whose result it discarded; that fetch was removed, so the warm-up lives here,
+        // in the one screen that actually needs the catalogue.
+        //
+        // Cheap: fetchProducts() is TTL-guarded, so this makes at most one request per
+        // CATALOGUE_TTL_MILLIS however often the screen opens. Fire-and-forget in the
+        // background, so it never delays opening a pack.
+        //
+        // runCatching, not try/catch, because an uncaught exception in viewModelScope
+        // crashes the app -- and fetchProducts() throws on a first-ever offline launch,
+        // when there is neither network nor cache.
+        viewModelScope.launch { runCatching { repo.fetchProducts() } }
+    }
+
     fun openPack(database: GameDatabase, username: String) = viewModelScope.launch {
         _uiState.value = PackUiState.Opening
 

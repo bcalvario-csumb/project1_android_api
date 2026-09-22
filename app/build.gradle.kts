@@ -95,6 +95,10 @@ dependencies {
     // Note: error_prone_core 2.50 requires JDK 21+ (JBR 25 satisfies this), and the plugin
     // automatically forks the compiler with the --add-exports/--add-opens that JDK 16+ needs.
     errorprone(libs.errorprone.core)
+    // org.json ships inside the Android SDK, but local JVM unit tests only get stub
+    // classes whose methods throw "Method ... not mocked". This puts the real
+    // implementation on the test classpath so pickRandomProduct() is testable off-device.
+    testImplementation(libs.org.json)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
