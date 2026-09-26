@@ -9,3 +9,6 @@ Project 1 Post Mortem - Group 2 / project1_android_api
     Issues Opened: 8
     Issues Created: 26
     Issues Closed: 18
+
+5. Advice
+   We will commit ourselves to communicate daily, as well as speak about the progress on the branches we're working on. 
